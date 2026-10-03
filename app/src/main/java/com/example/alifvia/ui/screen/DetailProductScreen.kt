@@ -1,7 +1,6 @@
 package com.example.alifvia.ui.screen
 
 import android.widget.Toast
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,10 +26,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -40,82 +38,150 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.alifvia.R
-import com.example.alifvia.data.dummy.DummyData
 import com.example.alifvia.data.model.Product
-import kotlinx.coroutines.delay
+import com.example.alifvia.ui.viewmodel.ProductUiState
+import com.example.alifvia.ui.viewmodel.ProductViewModel
+import com.example.alifvia.util.JualanConstants.BASE_URL
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DetailProductScreen(
     productId: Int,
-    navController: NavController?
+    navController: NavController?,
+    viewModel: ProductViewModel
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context =
+        androidx.compose.ui.platform.LocalContext.current
 
-    var isLoading by remember {
-        mutableStateOf(true)
-    }
-
-    var product by remember {
-        mutableStateOf<Product?>(null)
-    }
+    val uiState by viewModel.uiState.collectAsState()
 
     var quantity by rememberSaveable {
         mutableStateOf(1)
     }
 
-    LaunchedEffect(productId) {
+    when (val state = uiState) {
 
-        isLoading = true
+        is ProductUiState.Loading -> {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Text("Detail Produk")
+                        },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {
+                                    navController?.popBackStack()
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = R.drawable.back_icon
+                                    ),
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
+            ) { paddingValues ->
 
-        delay(1000)
-
-        product = DummyData.products.find {
-            it.id == productId
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
         }
 
-        isLoading = false
+        is ProductUiState.Error -> {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Text("Detail Produk")
+                        },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = {
+                                    navController?.popBackStack()
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(
+                                        id = R.drawable.back_icon
+                                    ),
+                                    contentDescription = "Back"
+                                )
+                            }
+                        }
+                    )
+                }
+            ) { paddingValues ->
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = state.message,
+                        color =
+                            MaterialTheme.colorScheme.error
+                    )
+                }
+            }
+        }
+
+        is ProductUiState.Success -> {
+
+            val product =
+                state.products.find {
+                    it.id == productId
+                }
+
+            StatelessDetailProduct(
+                product = product,
+                quantity = quantity,
+                onQuantityChange = {
+                    quantity = it
+                },
+                onBackClick = {
+                    navController?.popBackStack()
+                },
+                onAddToCartClick = {
+
+                    Toast.makeText(
+                        context,
+                        "Dimasukkan: $quantity",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+        }
     }
-
-    StatelessDetailProduct(
-        product = product,
-        isLoading = isLoading,
-        quantity = quantity,
-        onQuantityChange = {
-            quantity = it
-        },
-        onBackClick = {
-            navController?.popBackStack()
-        },
-        onAddToCartClick = {
-            Toast.makeText(
-                context,
-                "Dimasukkan: $quantity",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatelessDetailProduct(
     product: Product?,
-    isLoading: Boolean,
     quantity: Int,
     onQuantityChange: (Int) -> Unit,
     onBackClick: () -> Unit,
     onAddToCartClick: () -> Unit
 ) {
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "Detail Produk"
-                    )
+                    Text("Detail Produk")
                 },
                 navigationIcon = {
                     IconButton(
@@ -133,16 +199,7 @@ fun StatelessDetailProduct(
         }
     ) { paddingValues ->
 
-        if (isLoading) {
-
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-
-        } else if (product != null) {
+        if (product != null) {
 
             Column(
                 modifier = Modifier
@@ -153,18 +210,16 @@ fun StatelessDetailProduct(
                     )
             ) {
 
-                val imageRes =
+                val imageModel: Any =
                     if (product.img == "dummy_product") {
                         R.drawable.dummy_product
                     } else {
-                        R.drawable.dummy_product
+                        "$BASE_URL/img/${product.img}"
                     }
 
-                Image(
-                    painter = painterResource(
-                        id = imageRes
-                    ),
-                    contentDescription = null,
+                AsyncImage(
+                    model = imageModel,
+                    contentDescription = product.name,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(280.dp),
@@ -178,14 +233,19 @@ fun StatelessDetailProduct(
                 ) {
 
                     Text(
-                        product.name,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
+                        text = product.name,
+                        style =
+                            MaterialTheme.typography
+                                .headlineSmall,
+                        fontWeight =
+                            FontWeight.Bold
                     )
 
                     Text(
-                        "Rp ${product.price}",
-                        style = MaterialTheme.typography.titleLarge
+                        text = "Rp ${product.price}",
+                        style =
+                            MaterialTheme.typography
+                                .titleLarge
                     )
 
                     Spacer(
@@ -193,12 +253,12 @@ fun StatelessDetailProduct(
                     )
 
                     Text(
-                        "Deskripsi",
+                        text = "Deskripsi",
                         fontWeight = FontWeight.Bold
                     )
 
                     Text(
-                        product.description ?: ""
+                        text = product.description ?: ""
                     )
 
                     Spacer(
@@ -206,7 +266,7 @@ fun StatelessDetailProduct(
                     )
 
                     Text(
-                        "Stok: ${product.stock}"
+                        text = "Stok: ${product.stock}"
                     )
 
                     Spacer(
@@ -222,7 +282,7 @@ fun StatelessDetailProduct(
                     ) {
 
                         Text(
-                            "Jumlah Beli"
+                            text = "Jumlah Beli"
                         )
 
                         Row(
@@ -241,22 +301,27 @@ fun StatelessDetailProduct(
                                 enabled = quantity > 1
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Remove,
-                                    contentDescription = "Kurangi"
+                                    imageVector =
+                                        Icons.Default.Remove,
+                                    contentDescription =
+                                        "Kurangi"
                                 )
                             }
 
                             Text(
-                                quantity.toString(),
-                                modifier = Modifier.padding(
-                                    horizontal = 16.dp
-                                )
+                                text =
+                                    quantity.toString(),
+                                modifier =
+                                    Modifier.padding(
+                                        horizontal = 16.dp
+                                    )
                             )
 
                             FilledTonalIconButton(
                                 onClick = {
                                     if (
-                                        quantity < product.stock
+                                        quantity <
+                                        product.stock
                                     ) {
                                         onQuantityChange(
                                             quantity + 1
@@ -264,11 +329,14 @@ fun StatelessDetailProduct(
                                     }
                                 },
                                 enabled =
-                                    quantity < product.stock
+                                    quantity <
+                                            product.stock
                             ) {
                                 Icon(
-                                    imageVector = Icons.Default.Add,
-                                    contentDescription = "Tambah"
+                                    imageVector =
+                                        Icons.Default.Add,
+                                    contentDescription =
+                                        "Tambah"
                                 )
                             }
                         }
@@ -279,7 +347,8 @@ fun StatelessDetailProduct(
                     )
 
                     Button(
-                        onClick = onAddToCartClick,
+                        onClick =
+                            onAddToCartClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -288,7 +357,8 @@ fun StatelessDetailProduct(
                                     quantity > 0
                     ) {
                         Text(
-                            "Tambah ke Keranjang"
+                            text =
+                                "Tambah ke Keranjang"
                         )
                     }
                 }
@@ -301,7 +371,8 @@ fun StatelessDetailProduct(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    "Produk tidak ditemukan."
+                    text =
+                        "Produk tidak ditemukan"
                 )
             }
         }

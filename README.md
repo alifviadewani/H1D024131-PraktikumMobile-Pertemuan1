@@ -60,3 +60,19 @@ Pertemuan ketiga membuka wawasan tentang pengembangan aplikasi mobile yang lebih
 
 **Kesimpulan Praktikum:**  
 Pada pertemuan keempat, praktikum membahas konsep Recomposition dan UI Lifecycle pada Jetpack Compose. Mahasiswa mempelajari pengelolaan State, State Hoisting, validasi form, penggunaan Dropdown, upload gambar, serta simulasi proses loading menggunakan `LaunchedEffect`. Selain itu, mahasiswa mengimplementasikan navigasi antarhalaman seperti daftar produk, detail produk, dan halaman Hubungi Kami.
+
+---
+
+## 📝 Tugas Pertemuan 5
+**Tanggal**: Rabu, 30 September 2026
+
+### Hasil Praktikum
+
+![Pertemuan 5 - 1](docs/pertemuan-5-1.jpeg)
+
+![Pertemuan 5 - 2](docs/pertemuan-5-2.jpeg)
+
+![Pertemuan 5 - 3](docs/pertemuan-5-3.jpeg)
+
+**Kesimpulan Praktikum:**  
+Pada pertemuan kelima, praktikum membahas Networking dan Architecture pada aplikasi mobile. Mahasiswa mempelajari penggunaan Retrofit untuk mengambil data dari API, penggunaan ViewModel untuk mengelola data dan state, serta menampilkan data API ke dalam aplikasi. Selain itu, mahasiswa juga mempelajari penggunaan Coil untuk menampilkan gambar dari sumber jaringan.

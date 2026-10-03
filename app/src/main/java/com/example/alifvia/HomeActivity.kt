@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,11 +15,17 @@ import com.example.alifvia.ui.screen.DaftarProdukScreen
 import com.example.alifvia.ui.screen.DetailProductScreen
 import com.example.alifvia.ui.screen.HubungiKamiScreen
 import com.example.alifvia.ui.theme.JualanTheme
+import com.example.alifvia.ui.viewmodel.ProductViewModel
 
 class HomeActivity : ComponentActivity() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    override fun onCreate(
+        savedInstanceState: Bundle?
+    ) {
+
+        super.onCreate(
+            savedInstanceState
+        )
 
         enableEdgeToEdge()
 
@@ -35,7 +42,11 @@ class HomeActivity : ComponentActivity() {
 @Composable
 fun AppNavigation() {
 
-    val navController = rememberNavController()
+    val navController =
+        rememberNavController()
+
+    val productViewModel:
+            ProductViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -48,6 +59,7 @@ fun AppNavigation() {
 
             DaftarProdukScreen(
                 navController = navController,
+                viewModel = productViewModel,
                 onContactUsClick = {
                     navController.navigate(
                         "hubungi_kami"
@@ -59,21 +71,25 @@ fun AppNavigation() {
         composable(
             route = "detail/{productId}",
             arguments = listOf(
-                navArgument("productId") {
+                navArgument(
+                    "productId"
+                ) {
                     type = NavType.IntType
                 }
             )
         ) { backStackEntry ->
 
             val productId =
-                backStackEntry
-                    .arguments
-                    ?.getInt("productId")
+                backStackEntry.arguments
+                    ?.getInt(
+                        "productId"
+                    )
                     ?: 0
 
             DetailProductScreen(
+                productId = productId,
                 navController = navController,
-                productId = productId
+                viewModel = productViewModel
             )
         }
 
